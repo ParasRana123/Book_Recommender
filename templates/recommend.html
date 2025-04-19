@@ -73,6 +73,108 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         cursor: pointer;
     }
+
+    @media (max-width: 1200px) {
+        .card {
+            width: 220px;
+            height: 380px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .card {
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .card img {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        .author-container {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .author-img {
+            margin-right: 0;
+            margin-bottom: 20px;
+        }
+
+        #bookDetails .panel-body {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #bookDetails img {
+            margin-right: 0 !important;
+            margin-bottom: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 36px !important;
+        }
+
+        .navbar-brand,
+        .nav > li > a {
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+        }
+
+        .card {
+        width: 300px !important;
+        height: 400px !important;
+        margin: 10px auto;
+    }
+
+    .card img {
+        width: 100% !important;
+        height: 200px !important;
+        object-fit: cover;
+    }
+
+    .card h4,
+    .card p {
+        font-size: 14px;
+    }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .card {
+        width: 200px !important;
+        height: 240px !important;
+        margin: 10px auto;
+    }
+
+    .card img {
+        width: 100% !important;
+        height: 170px !important;
+        object-fit: cover;
+    }
+
+        .card h4,
+        .card p {
+            font-size: 12px;
+        }
+
+        #bookInput {
+            font-size: 16px;
+        }
+    }
 </style>
 <body>
 
