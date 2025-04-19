@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ details.title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+</head>
+<body style="background-color: black;">
+    <div class="container">
+        <h1 style="color: white;">{{ details.title }}</h1>
+        <img src="{{ details.image }}" alt="Book Cover">
+        <p style="color: white;"><strong>Author(s):</strong> {{ details.authors|join(', ') }}</p>
+        <p style="color: white;"><strong>Publisher:</strong> {{ details.publisher }}</p>
+        <p style="color: white;"><strong>Published Date:</strong> {{ details.publishedDate }}</p>
+        <p style="color: white;">{{ details.description }}</p>
+
+        <h2 style="color: white;">Reviews</h2>
+        {% if reviews %}
+            {% for review in reviews %}
+                <div style="color: white; border: 1px solid white; padding: 10px; margin-bottom: 10px;">
+                    {{ review }}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: red;">No reviews found.</p>
+        {% endif %}
+
+        <h2 style="color: white;">Recommended Books</h2>
+        <div class="row">
+            {% for book in recommendations %}
+                <div class="col-md-3">
+                    <a href="{{ url_for('book_details', book_name=book.title) }}">
+                        <img src="{{ book.image_url }}" alt="Book Cover">
+                        <p style="color: white;">{{ book.title }}</p>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

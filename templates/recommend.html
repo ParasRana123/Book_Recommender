@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Recommender System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<style>
+    body {
+        background-color: black;
+    }
+    .navbar {
+        background-color: #00a65a;
+    }
+    .text-white {
+        color: white;
+    }
+    #bookDetails {
+        display: none;
+        background-color: #535353;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    .spinner {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+    }
+    .spinner div {
+        width: 50px;
+        height: 50px;
+        border: 5px solid white;
+        border-top: 5px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: auto;
+    }
+    @keyframes spin {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+    .author-container {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+        background-color: #535353;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+
+    .author-img {
+        width: 200px;
+        height: auto;
+        border-radius: 75%;
+        margin-right: 45px;
+        box-shadow: 0px 1px 15px 4px rgba(250, 250, 250, 1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card {
+        background-color: #333;
+        border: 2px solid white;
+        width: 257px;
+        height: 400px;
+        margin-top: 30px;
+        box-shadow: 0px 1px 15px 4px rgba(250, 250, 250, 1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+</style>
+<body>
+
+    <nav class="navbar navbar-fixed-top">
+        <div class="container">
+            <a class="navbar-brand text-white">My Book Recommender</a>
+            <ul class="nav navbar-nav">
+                <li><a class="text-white" href="/">Home</a></li>
+                <li><a class="text-white" href="/recommend">Recommend</a></li>
+                <li><a class="text-white" href="#">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 80px;">
+        <h1 class="text-white" style="font-size:50px">Recommend Books</h1>
+        
+        <form id="recommendForm">
+            <input id="bookInput" name="user_input" type="text" class="form-control" placeholder="Enter a book name" required><br>
+            <button type="button" class="btn btn-lg btn-warning" id="getRecommendations">Get Recommendations</button>
+        </form>
+
+        <div class="spinner">
+            <div></div>
+            <p class="text-white">Fetching details, please wait...</p>
+        </div>
+
+        <div id="bookDetails" class="panel panel-default"></div>
+        <div id="authorDetails"></div> <!-- New Author Details Section -->
+        <hr>
+        <div id="recommendationsSection" class="row">
+        </div>
+        <div id="reviewsSection" style="margin-bottom: 20px;"></div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyAMzPWFgg32yLLQAlih9GBuzneh7je951I";
+    
+        $(document).ready(function () {
+            let urlParams = new URLSearchParams(window.location.search);
+            let bookFromURL = urlParams.get("book");
+            if (bookFromURL) {
+                fetchBookDetails(decodeURIComponent(bookFromURL));
+            }
+        });
+    
+        $("#getRecommendations").click(function () {
+            let bookTitle = $("#bookInput").val().trim();
+            if (bookTitle === "") {
+                alert("Please enter a book name.");
+                return;
+            }
+            fetchBookDetails(bookTitle);
+        });
+    
+        function fetchBookDetails(bookTitle) {
+            $(".spinner").show();
+            $("#bookDetails, #recommendationsSection, #reviewsSection, #authorDetails").hide().empty();
+    
+            Promise.all([
+                fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(bookTitle)}&key=${apiKey}`).then(res => res.json()),
+                fetch("/recommend_books", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ user_input: bookTitle })
+                }).then(res => res.json()),
+                $.ajax({
+                    type: "POST",
+                    url: "/get_reviews",
+                    contentType: "application/json",
+                    data: JSON.stringify({ book_title: bookTitle })
+                })
+            ]).then(([bookData, recommendations, reviewsResponse]) => {
+                $(".spinner").hide();
+    
+                if (bookData.items && bookData.items.length > 0) {
+                    let book = bookData.items[0].volumeInfo;
+                    let title = book.title || "Unknown Title";
+                    let authors = book.authors ? book.authors.join(", ") : "Unknown Author";
+                    let publisher = book.publisher || "Unknown Publisher";
+                    let publishedDate = book.publishedDate || "Unknown Date";
+                    let thumbnail = book.imageLinks ? book.imageLinks.thumbnail : "https://via.placeholder.com/150";
+                    let description = book.description || "No description available.";
+    
+                    $("#bookDetails").html(`
+                        <div class="panel-body" style="display: flex; align-items: center;">
+                            <img src="${thumbnail}" class="book-cover" alt="Book Cover" style="margin-right: 50px; border: 2px solid white;box-shadow: 0px 1px 15px 4px rgba(250, 250, 250, 1);transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                            <div>
+                                <h4>${title}</h4>
+                                <p><strong>Author(s):</strong> ${authors}</p>
+                                <p><strong>Publisher:</strong> ${publisher}</p>
+                                <p><strong>Published Date:</strong> ${publishedDate}</p>
+                                <p>${description}</p>
+                            </div>
+                        </div>
+                    `).show();
+    
+                    if (book.authors) {
+                        fetchAuthorDetails(book.authors[0]); // Fetch first author details
+                    }
+                } else {
+                    $("#bookDetails").html("<p style='color:red;'>No book found</p>").show();
+                }
+    
+                if (!Array.isArray(recommendations) || recommendations.length === 0) {
+                    $("#recommendationsSection").html("<p style='color:red;'>No recommendations available.</p>").show();
+                } else {
+                    let htmlContent = recommendations.map(book => `
+                        <div class="col-md-3">
+                            <div style="color: white;" class="card" onclick="fetchBookDetails('${book.title}')">
+                                <img src="${book.image_url}" alt="Book Cover" style="width: 254px; height: 300px">
+                                <h4 style="text-align: center;">${book.title}</h4>
+                                <p style="text-align: center;"><em>${book.author}</em></p>
+                            </div>
+                        </div>
+                    `).join("");
+                    $("#recommendationsSection").html(htmlContent).show();
+                }
+    
+                let reviewsSection = $("#reviewsSection");
+                reviewsSection.empty();
+    
+                if (reviewsResponse.reviews && reviewsResponse.reviews.length > 0) {
+                    reviewsResponse.reviews.forEach((review, index) => {
+                        reviewsSection.append(`<div style="margin-top: 30px; border: 2px solid white; padding: 20px; background-color: #333; color: white;">
+                                                   <p><strong>Review ${index + 1}:</strong> ${review} </p>
+                                               </div>`);
+                    });
+                } else {
+                    reviewsSection.append("<p>No reviews found.</p>");
+                }
+                reviewsSection.show();
+            }).catch(error => {
+                console.error("Error fetching data:", error);
+                $(".spinner").hide();
+                alert("An error occurred while fetching data. Please try again.");
+            });
+        }
+    
+        function fetchAuthorDetails(authorName) {
+            let wikiAPI = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(authorName)}`;
+    
+            fetch(wikiAPI)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.type !== "standard") {
+                        $("#authorDetails").html("<p>No author details found.</p>").show();
+                        return;
+                    }
+    
+                    let authorImage = data.thumbnail ? data.thumbnail.source : "https://via.placeholder.com/150";
+                    let authorDescription = data.extract || "No biography available.";
+    
+                    $("#authorDetails").html(`
+                        <div class="author-container">
+                            <img src="${authorImage}" class="author-img" alt="Author Image">
+                            <div>
+                                <h4>${authorName}</h4>
+                                <p>${authorDescription}</p>
+                                <a href="${data.content_urls.desktop.page}" target="_blank" class="btn btn-primary btn-sm">Read More</a>
+                            </div>
+                        </div>
+                        <h1 style="color: white; text-align: center;"> People Also Like:  </h1>
+                    `).show();
+                })
+                .catch(error => console.error("Error fetching author details:", error));
+        }
+    </script>
+    
+</body>
+</html>
